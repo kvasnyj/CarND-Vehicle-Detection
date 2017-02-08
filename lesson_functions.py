@@ -104,8 +104,8 @@ def extract_features(imgs, color_space='RGB', spatial_size=(32, 32),
 # start and stop positions in both x and y,
 # window size (x and y dimensions),
 # and overlap fraction (for both x and y)
-def slide_window(img, x_start_stop=[None, None], y_start_stop=[None, None],
-                 xy_window=(64, 64), xy_overlap=(0.5, 0.5)):
+def slide_window(img, x_start_stop=[None, None], y_start_stop=[None, None], xsize = [None, None],
+                 overlap=0.5):
     # If x and/or y start/stop positions not defined, set to image size
     if x_start_stop[0] == None:
         x_start_stop[0] = 0
@@ -115,31 +115,28 @@ def slide_window(img, x_start_stop=[None, None], y_start_stop=[None, None],
         y_start_stop[0] = 0
     if y_start_stop[1] == None:
         y_start_stop[1] = img.shape[0]
-    # Compute the span of the region to be searched
-    xspan = x_start_stop[1] - x_start_stop[0]
-    yspan = y_start_stop[1] - y_start_stop[0]
-    # Compute the number of pixels per step in x/y
-    nx_pix_per_step = np.int(xy_window[0] * (1 - xy_overlap[0]))
-    ny_pix_per_step = np.int(xy_window[1] * (1 - xy_overlap[1]))
-    # Compute the number of windows in x/y
-    nx_windows = np.int(xspan / nx_pix_per_step) - 1
-    ny_windows = np.int(yspan / ny_pix_per_step) - 1
+
     # Initialize a list to append window positions to
     window_list = []
-    # Loop through finding x and y window positions
-    # Note: you could vectorize this step, but in practice
-    # you'll be considering windows one by one with your
-    # classifier, so looping makes sense
-    for ys in range(ny_windows):
-        for xs in range(nx_windows):
-            # Calculate window position
-            startx = xs * nx_pix_per_step + x_start_stop[0]
-            endx = startx + xy_window[0]
-            starty = ys * ny_pix_per_step + y_start_stop[0]
-            endy = starty + xy_window[1]
 
+    y = y_start_stop[0]
+    while(y<y_start_stop[1]):
+        # define window size depending from y coordinate
+        y0, x0  = y_start_stop[1], xsize[1]
+        y1, x1 =  y_start_stop[0], xsize[0]
+        size = int((y - y0) * (x1 - x0) / (y1 - y0) + x0)
+        if size<0:
+            print("Negative size: ", size)
+            return None
+
+        #print(y, size)
+
+        x = x_start_stop[0]
+        while (x < x_start_stop[1]):
             # Append window position to list
-            window_list.append(((startx, starty), (endx, endy)))
+            window_list.append(((x, y), (x+ size, y+ size)))
+            x += np.int(size * (1 - overlap))
+        y += np.int(size * (1 - overlap))
     # Return the list of windows
     return window_list
 
