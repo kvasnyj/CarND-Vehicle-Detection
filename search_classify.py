@@ -11,9 +11,25 @@ from skimage.feature import hog
 from lesson_functions import *
 # NOTE: the next import is only valid for scikit-learn version <= 0.17
 # for scikit-learn >= 0.18 use:
-from sklearn.model_selection import train_test_split
-#from sklearn.cross_validation import train_test_split
+#from sklearn.model_selection import train_test_split
+from sklearn.cross_validation import train_test_split
 import pickle
+
+color_space = 'HLS'  # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
+orient = 10  # HOG orientations
+pix_per_cell = 16  # HOG pixels per cell
+cell_per_block = 2  # HOG cells per block
+hog_channel = 1 # Can be 0, 1, 2, or "ALL"
+spatial_size = (16, 16)  # Spatial binning dimensions
+hist_bins = 16  # Number of histogram bins
+spatial_feat = False  # Spatial features on or off
+hist_feat = True  # Histogram features on or off
+hog_feat = True  # HOG features on or off
+y_start_stop = [380, 650]  # Min and max in y to search in slide_window()
+precompiled = 2 # 0 - no, 1 - features, 2 - features  and classifier
+debug = False
+
+file = color_space+"_"+str(hog_channel)+"_"+str(hist_bins)+".p"
 
 # Define a function to extract features from a single image window
 # This function is very similar to extract_features()
@@ -36,6 +52,8 @@ def single_img_features(img, color_space='RGB', spatial_size=(32, 32),
             feature_image = cv2.cvtColor(img, cv2.COLOR_RGB2YUV)
         elif color_space == 'YCrCb':
             feature_image = cv2.cvtColor(img, cv2.COLOR_RGB2YCrCb)
+        elif color_space == 'Gray':
+            feature_image = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
     else:
         feature_image = np.copy(img)
     # 3) Compute spatial features if flag is set
@@ -56,6 +74,9 @@ def single_img_features(img, color_space='RGB', spatial_size=(32, 32),
                 hog_features.extend(get_hog_features(feature_image[:, :, channel],
                                                      orient, pix_per_cell, cell_per_block,
                                                      vis=False, feature_vec=True))
+        elif color_space == 'Gray':
+            hog_features = get_hog_features(feature_image, orient,
+                                            pix_per_cell, cell_per_block, vis=False, feature_vec=True)
         else:
             hog_features = get_hog_features(feature_image[:, :, hog_channel], orient,
                                             pix_per_cell, cell_per_block, vis=False, feature_vec=True)
@@ -160,9 +181,15 @@ def apply_threshold(heat, threshold):
     return heat
 
 def process_image(image_src, debug = False):
+    #vertices = np.array([[(200, 650), (500, 380), (image_src.shape[1], 380), (image_src.shape[1], 650)]], dtype=np.int32)
+    #image = region_of_interest(image_src, vertices)
+    # plt.imshow(image)
+    # plt.pause(0)
+
     image = image_src.astype(np.float32) / 255
+
     windows = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop,
-                           xsize=[64, 256], overlap=0.7)
+                           xsize=[64, 64], overlap=0.6)
 
     # window_img = draw_boxes(draw_image, windows, color=(0, 0, 255), thick=2)
     if debug: print("total windows: ", len(windows))
@@ -175,12 +202,14 @@ def process_image(image_src, debug = False):
                                  cell_per_block=cell_per_block,
                                  hog_channel=hog_channel, spatial_feat=spatial_feat,
                                  hist_feat=hist_feat, hog_feat=hog_feat)
-    # window_img = draw_boxes(draw_image, hot_windows, color=(0, 0, 255), thick=6)
     if debug: print("hot windows: ", len(hot_windows))
+    # window_img = draw_boxes(image, hot_windows, color=(0, 0, 255), thick=6)
+    #plt.imshow(window_img)
+    #plt.pause(0)
 
     heatmap = np.zeros_like(image[:, :, 0]).astype(np.float)
     heatmap = add_heat(heatmap, hot_windows)
-    heatmap = apply_threshold(heatmap, 0)
+    heatmap = apply_threshold(heatmap, 1)
     from scipy.ndimage.measurements import label
     labels = label(heatmap)
     labeled_windows = labeled_bboxes(labels)
@@ -195,20 +224,6 @@ def process_image(image_src, debug = False):
 # Read in cars and notcars
 cars = []
 notcars = []
-
-color_space = 'HLS'  # Can be RGB, HSV, LUV, HLS, YUV, YCrCb
-orient = 10  # HOG orientations
-pix_per_cell = 16  # HOG pixels per cell
-cell_per_block = 2  # HOG cells per block
-hog_channel = 1 # Can be 0, 1, 2, or "ALL"
-spatial_size = (16, 16)  # Spatial binning dimensions
-hist_bins = 16  # Number of histogram bins
-spatial_feat = False  # Spatial features on or off
-hist_feat = True  # Histogram features on or off
-hog_feat = True  # HOG features on or off
-y_start_stop = [350, None]  # Min and max in y to search in slide_window()
-precompiled = 2 # 0 - no, 1 - features, 2 - features  and classifier
-file =  color_space+"_"+str(hog_channel)+"_"+str(hist_bins)+".p"
 
 if precompiled == 0:
     for image in glob.glob('train_images/vehicles/**/*.png', recursive=True):
@@ -266,8 +281,8 @@ if (precompiled==0)  or  (precompiled==1):
           'pixels per cell and', cell_per_block, 'cells per block')
     print('Feature vector length:', len(X_train[0]))
     # Use a linear SVC
-    svc = svm.SVC(kernel='rbf')
-    #svc = LinearSVC()
+    #svc = svm.SVC(kernel='rbf')
+    svc = LinearSVC()
 
     # Check the training time for the SVC
     t = time.time()
@@ -287,13 +302,12 @@ if (precompiled==0)  or  (precompiled==1):
 
     pickle.dump(dist_pickle, open(file, "wb"))
 
-
 # Processing clip
 from moviepy.editor import VideoFileClip
 clip = VideoFileClip('project_video.mp4')#.subclip(39, 40)
-new_clip = clip.fl_image(process_image)
-new_clip.write_videofile('project_video_result.mp4', audio=False)
-
-#image = mpimg.imread('test_images/test4.jpg')
-#draw_image = np.copy(image)
-#image = image.astype(np.float32)/255
+if(not debug):
+    new_clip = clip.fl_image(process_image)
+    new_clip.write_videofile('project_video_result.mp4', audio=False)
+else:
+    image = mpimg.imread('test_images/test4.jpg')
+    image = process_image(image, debug = True)

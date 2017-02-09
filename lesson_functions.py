@@ -32,16 +32,18 @@ def bin_spatial(img, size=(32, 32)):
     # Return the feature vector
     return features
 
-
 # Define a function to compute color histogram features
 # NEED TO CHANGE bins_range if reading .png files with mpimg!
 def color_hist(img, nbins=32, bins_range=(0, 256)):
-    # Compute the histogram of the color channels separately
-    channel1_hist = np.histogram(img[:, :, 0], bins=nbins, range=bins_range)
-    channel2_hist = np.histogram(img[:, :, 1], bins=nbins, range=bins_range)
-    channel3_hist = np.histogram(img[:, :, 2], bins=nbins, range=bins_range)
-    # Concatenate the histograms into a single feature vector
-    hist_features = np.concatenate((channel1_hist[0], channel2_hist[0], channel3_hist[0]))
+    if len(img.shape)==3:
+        # Compute the histogram of the color channels separately
+        channel1_hist = np.histogram(img[:, :, 0], bins=nbins, range=bins_range)
+        channel2_hist = np.histogram(img[:, :, 1], bins=nbins, range=bins_range)
+        channel3_hist = np.histogram(img[:, :, 2], bins=nbins, range=bins_range)
+        # Concatenate the histograms into a single feature vector
+        hist_features = np.concatenate((channel1_hist[0], channel2_hist[0], channel3_hist[0]))
+    else:
+        hist_features = np.histogram(img, bins=nbins, range=bins_range)
     # Return the individual histograms, bin_centers and feature vector
     return hist_features
 
@@ -71,6 +73,8 @@ def extract_features(imgs, color_space='RGB', spatial_size=(32, 32),
                 feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2YUV)
             elif color_space == 'YCrCb':
                 feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2YCrCb)
+            elif color_space == 'Gray':
+                feature_image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
         else:
             feature_image = np.copy(image)
 
@@ -90,6 +94,9 @@ def extract_features(imgs, color_space='RGB', spatial_size=(32, 32),
                                                          orient, pix_per_cell, cell_per_block,
                                                          vis=False, feature_vec=True))
                 hog_features = np.ravel(hog_features)
+            elif color_space == 'Gray':
+                hog_features = get_hog_features(feature_image, orient,
+                                                pix_per_cell, cell_per_block, vis=False, feature_vec=True)
             else:
                 hog_features = get_hog_features(feature_image[:, :, hog_channel], orient,
                                                 pix_per_cell, cell_per_block, vis=False, feature_vec=True)
@@ -99,6 +106,22 @@ def extract_features(imgs, color_space='RGB', spatial_size=(32, 32),
     # Return list of feature vectors
     return features
 
+def region_of_interest(img, vertices):
+    mask = np.zeros_like(img)
+
+    # defining a 3 channel or 1 channel color to fill the mask with depending on the input image
+    if len(img.shape) > 2:
+        channel_count = img.shape[2]  # i.e. 3 or 4 depending on your image
+        ignore_mask_color = (255,) * channel_count
+    else:
+        ignore_mask_color = 255
+
+    # filling pixels inside the polygon defined by "vertices" with the fill color
+    cv2.fillPoly(mask, vertices, ignore_mask_color)
+
+    # returning the image only where mask pixels are nonzero
+    masked_image = cv2.bitwise_and(img, mask)
+    return masked_image
 
 # Define a function that takes an image,
 # start and stop positions in both x and y,
@@ -118,11 +141,11 @@ def slide_window(img, x_start_stop=[None, None], y_start_stop=[None, None], xsiz
 
     # Initialize a list to append window positions to
     window_list = []
-
+    size = 0
     y = y_start_stop[0]
-    while(y<y_start_stop[1]):
+    while(y+size<y_start_stop[1]):
         # define window size depending from y coordinate
-        y0, x0  = y_start_stop[1], xsize[1]
+        y0, x0  = y_start_stop[1]-xsize[1], xsize[1]
         y1, x1 =  y_start_stop[0], xsize[0]
         size = int((y - y0) * (x1 - x0) / (y1 - y0) + x0)
         if size<0:
@@ -132,7 +155,7 @@ def slide_window(img, x_start_stop=[None, None], y_start_stop=[None, None], xsiz
         #print(y, size)
 
         x = x_start_stop[0]
-        while (x < x_start_stop[1]):
+        while (x+size < x_start_stop[1]):
             # Append window position to list
             window_list.append(((x, y), (x+ size, y+ size)))
             x += np.int(size * (1 - overlap))
