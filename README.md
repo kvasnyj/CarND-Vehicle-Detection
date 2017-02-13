@@ -40,14 +40,16 @@ I started by reading in all the `vehicle` and `non-vehicle` images.  Here is an 
 
 I then explored different color spaces and different `skimage.hog()` parameters (`orientations`, `pixels_per_cell`, and `cells_per_block`).  I grabbed random images from each of the two classes and displayed them to get a feel for what the `skimage.hog()` output looks like.
 Here is an example using the `HLS` color space and HOG parameters of `orientations=10`, `pixels_per_cell=(16, 16)` and `cells_per_block=(2, 2)`:
-
-CAR HLS CHANNEL L
+####CAR HLS CHANNEL L
 ![alt text](./output_images/figure_1.png)
-CAR HOG
+
+####CAR HOG
 ![alt text](./output_images/figure_2.png)
-NOT CAR HLS CHANNEL L
+
+####NOT CAR HLS CHANNEL L
 ![alt text](./output_images/figure_3.png)
-NOT CAR HOG
+
+####NOT CAR HOG
 ![alt text](./output_images/figure_4.png)
 
 ####2. Explain how you settled on your final choice of HOG parameters.
