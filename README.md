@@ -133,4 +133,6 @@ The biggest problem is following: for the better result we need overlap equals 0
 * only HOG features
 * limit x and y coordinate
 
+Second problem it false positive despite on heatmap threshold. To resolve I stack last six heatmaps, and apply threshold filter to the sum of them.  
+
 For further improvement I suggest using different windows size in different part of frame: maximum size in bottom part and minimum on the top.   
