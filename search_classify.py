@@ -12,7 +12,7 @@ from lesson_functions import *
 # NOTE: the next import is only valid for scikit-learn version <= 0.17
 # for scikit-learn >= 0.18 use:
 #from sklearn.model_selection import train_test_split
-from sklearn.cross_validation import train_test_split
+#from sklearn.cross_validation import train_test_split
 import pickle
 from moviepy.editor import VideoFileClip
 
@@ -25,23 +25,29 @@ hog_channel = 1 # Can be 0, 1, 2, or "ALL"
 spatial_size = (16, 16)  # Spatial binning dimensions
 hist_bins = 16  # Number of histogram bins
 spatial_feat = False  # Spatial features on or off
-hist_feat = True  # Histogram features on or off
+hist_feat = False  # Histogram features on or off
 hog_feat = True  # HOG features on or off
-y_start_stop = [380, 650]  # Min and max in y to search in slide_window()
-overlap = 0.5 # overlap fraction (common for x and y)
-sizes_window = (64, 96, 128)
-heat_threshold = 2
+y_start_stop = [400, 600]  # Min and max in y to search in slide_window()
+x_start_stop = [720, None] # Min and max in x to search in slide_window()
+overlap = 0.9 # overlap fraction (common for x and y)
+sizes_window = [96, 128]
+heat_depth = 8 # smoothing heatmap by heatmaps stack
+heat_threshold = 7 # final threshold = heat_depth*heat_threshold
+
+# =============   VARIABLES =============
 precompiled = 2 # 0 - no, 1 - features, 2 - features  and classifier
 debug = False
 
 # =============   PROCESS =============
 svc = None
 X_scaler = None
+heatmap = []
 
 def process_image(image_src, debug = False):
+    global heatmap
     image = image_src.astype(np.float32) / 255
 
-    windows = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop,
+    windows = slide_window(image, x_start_stop=x_start_stop, y_start_stop=y_start_stop,
                            sizes_window=sizes_window, overlap=overlap)
 
     # window_img = draw_boxes(draw_image, windows, color=(0, 0, 255), thick=2)
@@ -60,11 +66,17 @@ def process_image(image_src, debug = False):
     #plt.imshow(window_img)
     #plt.pause(0)
 
-    heatmap = np.zeros_like(image[:, :, 0]).astype(np.float)
-    heatmap = add_heat(heatmap, hot_windows)
-    heatmap = apply_threshold(heatmap, heat_threshold)
+    hm = np.zeros_like(image[:, :, 0]).astype(np.float)
+    heatmap_stack = np.zeros_like(image[:, :, 0]).astype(np.float)
+
+    hm = add_heat(hm, hot_windows)
+    heatmap.append(hm)
+    while(len(heatmap) > heat_depth): del heatmap[0]
+    for h in heatmap: heatmap_stack += h
+
+    heatmap_stack = apply_threshold(heatmap_stack, heat_depth*heat_threshold)
     from scipy.ndimage.measurements import label
-    labels = label(heatmap)
+    labels = label(heatmap_stack)
     labeled_windows = labeled_bboxes(labels)
     result = draw_boxes(image_src, labeled_windows, color=(0, 0, 255), thick=3)
 
@@ -140,7 +152,8 @@ def prepare_classifier():
 
         # Check the training time for the SVC
         t = time.time()
-        svc.fit(X_train, y_train)
+        #svc.fit(X_train, y_train)
+        svc.fit(scaled_X, y)
         t2 = time.time()
         print(round(t2 - t, 2), 'Seconds to train SVC...')
         # Check the score of the SVC
@@ -160,10 +173,12 @@ def prepare_classifier():
 
 svc, X_scaler = prepare_classifier()
 
-clip = VideoFileClip('project_video.mp4')#.subclip(39, 40)
+clip = VideoFileClip('project_video.mp4')#.subclip(25, 27)
 if(not debug):
     new_clip = clip.fl_image(process_image)
     new_clip.write_videofile('project_video_result.mp4', audio=False)
 else:
-    image = mpimg.imread('test_images/test4.jpg')
+    heat_depth = 1
+    clip.save_frame('test_images/testmy.jpg')
+    image = mpimg.imread('test_images/testmy.jpg')
     image = process_image(image, debug = True)

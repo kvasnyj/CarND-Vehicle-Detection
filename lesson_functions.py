@@ -127,7 +127,7 @@ def region_of_interest(img, vertices):
 # start and stop positions in both x and y,
 # window size (x and y dimensions),
 # and overlap fraction (for both x and y)
-def slide_window(img, x_start_stop=[None, None], y_start_stop=[None, None], sizes_window=(64),
+def slide_window(img, x_start_stop=[None, None], y_start_stop=[None, None], sizes_window=[64],
                  overlap=0.5):
     # If x and/or y start/stop positions not defined, set to image size
     if x_start_stop[0] == None:
