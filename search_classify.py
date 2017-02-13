@@ -31,8 +31,8 @@ y_start_stop = [400, 600]  # Min and max in y to search in slide_window()
 x_start_stop = [720, None] # Min and max in x to search in slide_window()
 overlap = 0.9 # overlap fraction (common for x and y)
 sizes_window = [96, 128]
-heat_depth = 8 # smoothing heatmap by heatmaps stack
-heat_threshold = 7 # final threshold = heat_depth*heat_threshold
+heat_depth = 6 # smoothing heatmap by heatmaps stack
+heat_threshold = 5 # final threshold = heat_depth*heat_threshold
 
 # =============   VARIABLES =============
 precompiled = 2 # 0 - no, 1 - features, 2 - features  and classifier

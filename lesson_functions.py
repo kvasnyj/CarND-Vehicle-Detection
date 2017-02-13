@@ -323,7 +323,8 @@ def labeled_bboxes(labels):
         nonzerox = np.array(nonzero[1])
         # Define a bounding box based on min/max x and y
         bbox = (np.min(nonzerox), np.min(nonzeroy)), (np.max(nonzerox), np.max(nonzeroy))
-        bboxes.append(bbox)
+        if (abs(bbox[0][0]-bbox[1][0]) > 30) & (abs(bbox[0][1]-bbox[1][1]) > 30) :
+            bboxes.append(bbox)
     return bboxes
 
 
