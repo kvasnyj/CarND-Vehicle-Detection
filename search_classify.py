@@ -11,7 +11,7 @@ from skimage.feature import hog
 from lesson_functions import *
 # NOTE: the next import is only valid for scikit-learn version <= 0.17
 # for scikit-learn >= 0.18 use:
-#from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split
 #from sklearn.cross_validation import train_test_split
 import pickle
 from moviepy.editor import VideoFileClip
@@ -35,7 +35,7 @@ heat_depth = 6 # smoothing heatmap by heatmaps stack
 heat_threshold = 5 # final threshold = heat_depth*heat_threshold
 
 # =============   VARIABLES =============
-precompiled = 2 # 0 - no, 1 - features, 2 - features  and classifier
+precompiled = 0 # 0 - no, 1 - features, 2 - features  and classifier
 debug = False
 
 # =============   PROCESS =============
@@ -152,8 +152,7 @@ def prepare_classifier():
 
         # Check the training time for the SVC
         t = time.time()
-        #svc.fit(X_train, y_train)
-        svc.fit(scaled_X, y)
+        svc.fit(X_train, y_train)
         t2 = time.time()
         print(round(t2 - t, 2), 'Seconds to train SVC...')
         # Check the score of the SVC
