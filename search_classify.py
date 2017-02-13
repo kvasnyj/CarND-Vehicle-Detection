@@ -170,6 +170,16 @@ def prepare_classifier():
 
 # =============   Main code  =============
 
+#image = mpimg.imread('./train_images/vehicles/GTI_Far/image0045.png')
+image = mpimg.imread('./train_images/non-vehicles/Extras/extra40.png')
+image = cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
+
+features, image = get_hog_features(image[:, :, 1], orient, pix_per_cell, cell_per_block,
+                     vis=True, feature_vec=True)
+
+plt.imshow(image)
+plt.pause(0)
+
 svc, X_scaler = prepare_classifier()
 
 clip = VideoFileClip('project_video.mp4')#.subclip(25, 27)

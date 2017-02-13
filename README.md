@@ -11,7 +11,6 @@ The goals / steps of this project are the following:
 [//]: # (Image References)
 [image1car]: /train_images/vehicles/GTI_Far/image0045.png
 [image1notcar]: /train_images/non-vehicles/Extras/extra40.png
-[image2]: ./examples/HOG_example.jpg
 [image3]: ./examples/sliding_windows.jpg
 [image4]: ./examples/sliding_window.jpg
 [image5]: ./examples/bboxes_and_heat.png
@@ -43,7 +42,8 @@ I then explored different color spaces and different `skimage.hog()` parameters 
 Here is an example using the `HLS` color space and HOG parameters of `orientations=10`, `pixels_per_cell=(16, 16)` and `cells_per_block=(2, 2)`:
 
 
-![alt text][image2]
+![alt text](./output_images/figure_1.png)![alt text](./output_images/figure_2.png)
+![alt text](./output_images/figure_3.png)![alt text](./output_images/figure_4.png)
 
 ####2. Explain how you settled on your final choice of HOG parameters.
 
