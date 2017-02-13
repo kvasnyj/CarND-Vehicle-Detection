@@ -35,7 +35,7 @@ heat_depth = 6 # smoothing heatmap by heatmaps stack
 heat_threshold = 5 # final threshold = heat_depth*heat_threshold
 
 # =============   VARIABLES =============
-precompiled = 0 # 0 - no, 1 - features, 2 - features  and classifier
+precompiled = 2 # 0 - no, 1 - features, 2 - features  and classifier
 debug = False
 
 # =============   PROCESS =============
@@ -50,10 +50,10 @@ def process_image(image_src, debug = False):
     windows = slide_window(image, x_start_stop=x_start_stop, y_start_stop=y_start_stop,
                            sizes_window=sizes_window, overlap=overlap)
 
-    # window_img = draw_boxes(draw_image, windows, color=(0, 0, 255), thick=2)
+    #window_img = draw_boxes(image, windows, color=(0, 0, 255), thick=2)
     if debug: print("total windows: ", len(windows))
-    # plt.imshow(window_img)
-    # plt.pause(0)
+    #plt.imshow(window_img)
+    #plt.pause(0)
 
     hot_windows = search_windows(image, windows, svc, X_scaler, color_space=color_space,
                                  spatial_size=spatial_size, hist_bins=hist_bins,
@@ -169,20 +169,9 @@ def prepare_classifier():
     return svc, X_scaler
 
 # =============   Main code  =============
-
-#image = mpimg.imread('./train_images/vehicles/GTI_Far/image0045.png')
-image = mpimg.imread('./train_images/non-vehicles/Extras/extra40.png')
-image = cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
-
-features, image = get_hog_features(image[:, :, 1], orient, pix_per_cell, cell_per_block,
-                     vis=True, feature_vec=True)
-
-plt.imshow(image)
-plt.pause(0)
-
 svc, X_scaler = prepare_classifier()
 
-clip = VideoFileClip('project_video.mp4')#.subclip(25, 27)
+clip = VideoFileClip('project_video.mp4')#.subclip(33)
 if(not debug):
     new_clip = clip.fl_image(process_image)
     new_clip.write_videofile('project_video_result.mp4', audio=False)

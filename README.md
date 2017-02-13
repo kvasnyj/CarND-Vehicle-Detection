@@ -82,7 +82,7 @@ Hyperparameters here:
 
 Code: methods `slide_window()` and `search_windows()` in `lesson funtions.py`
 
-![alt text][image3]
+![alt text](./output_images/figure_5.png)
 
 ####2. Show some examples of test images to demonstrate how your pipeline is working.  What did you do to optimize the performance of your classifier?
 
@@ -117,8 +117,8 @@ Here's an example result showing the heatmap from a series of frames of video, t
 ### Here is the output of `scipy.ndimage.measurements.label()` on the integrated heatmap from all six frames:
 ![alt text][image6]
 
-### Here the resulting bounding boxes are drawn onto the last frame in the series:
-![alt text][image7]
+### Here the resulting bounding boxes are drawn onto one of the frame in the series:
+![alt text](./output_images/figure_6.png)
 
 
 
